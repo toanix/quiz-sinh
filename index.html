@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Sinh học – Đề cương cuối HK II</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #151f30;
+    --border: #1f2d45;
+    --accent: #4f8ef7;
+    --accent2: #7ab3ff;
+    --gold: #4f8ef7;
+    --gold2: #7ab3ff;
+    --red: #f85149;
+    --green: #3fb950;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Background grid like ui.html */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(79, 142, 247, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79, 142, 247, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(79,142,247,0.1) 0%, rgba(79,142,247,0.03) 40%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    left: 50%; top: 50%;
+    transition: left 0.08s ease, top 0.08s ease;
+  }
+
+  .screen { display: none; width: 100%; max-width: 860px; padding: 24px 16px 60px; position: relative; z-index: 1; }
+  .screen.active { display: block; }
+
+  /* ── START SCREEN ── */
+  #start-screen { text-align: center; padding-top: 60px; }
+
+  .logo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(79,142,247,0.1); border: 1px solid rgba(79,142,247,0.4);
+    border-radius: 999px; padding: 6px 16px;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+    color: var(--accent2); text-transform: uppercase; margin-bottom: 28px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  h1.main-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: 900; line-height: 1.15;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 12px;
+    animation: fadeDown 0.9s 0.1s ease both;
+  }
+
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 36px; animation: fadeDown 1s 0.2s ease both; }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .stats-row {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 22px; text-align: center; min-width: 110px;
+    transition: border-color 0.3s;
+  }
+  .stat-card:hover { border-color: rgba(79,142,247,0.4); }
+  .stat-card .num { font-family: 'Libre Baskerville', serif; font-size: 1.9rem; font-weight: 700; color: var(--accent); }
+  .stat-card .lbl { font-size: 0.73rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .mode-list {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px; margin-bottom: 40px;
+  }
+
+  .mode-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; text-align: left;
+    cursor: pointer; transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .mode-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: linear-gradient(180deg, var(--accent), var(--accent2)); opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .mode-card:hover, .mode-card.selected {
+    border-color: rgba(79,142,247,0.5); background: rgba(79,142,247,0.07);
+  }
+  .mode-card:hover::before, .mode-card.selected::before { opacity: 1; }
+  .mode-card.selected { box-shadow: 0 0 0 1px rgba(79,142,247,0.4); }
+  .mode-card .mode-num { font-size: 0.68rem; color: var(--accent2); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .mode-card .mode-name { font-size: 0.87rem; font-weight: 600; margin-top: 4px; line-height: 1.3; }
+  .mode-card .mode-count { font-size: 0.73rem; color: var(--muted); margin-top: 6px; }
+
+  .btn-start {
+    background: linear-gradient(135deg, #4f8ef7, #7ab3ff);
+    color: #0a0e17; border: none; border-radius: var(--radius);
+    padding: 16px 48px; font-size: 1.05rem; font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.03em;
+    animation: fadeDown 1s 0.3s ease both;
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,142,247,0.4); }
+  .btn-start:active { transform: translateY(0); }
+
+  /* ── QUIZ SCREEN ── */
+  #quiz-screen { padding-top: 20px; }
+
+  .quiz-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
+  }
+
+  .mode-badge {
+    background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.3);
+    border-radius: 999px; padding: 5px 14px;
+    font-size: 0.72rem; font-weight: 700; color: var(--accent2);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .q-counter { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  .q-counter span { color: var(--text); font-weight: 700; }
+
+  .progress-bar-wrap {
+    width: 100%; height: 5px; background: var(--border);
+    border-radius: 999px; margin-bottom: 24px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; background: linear-gradient(90deg, #4f8ef7, #7ab3ff);
+    border-radius: 999px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .segment-progress {
+    display: flex; gap: 3px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .seg-dot {
+    flex: 1; min-width: 6px; max-width: 16px; height: 5px;
+    border-radius: 999px; background: var(--border); transition: background 0.3s;
+  }
+  .seg-dot.correct { background: var(--green); }
+  .seg-dot.wrong { background: var(--red); }
+  .seg-dot.current { background: var(--accent); }
+
+  .question-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 26px; margin-bottom: 14px;
+    animation: slideIn 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-text {
+    font-size: 1rem; font-weight: 600; line-height: 1.65;
+    margin-bottom: 18px;
+  }
+
+  .q-image {
+    width: 100%; max-width: 320px; height: auto;
+    border-radius: 10px; border: 1px solid var(--border);
+    margin: 0 auto 18px; display: block;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 9px; }
+
+  .option-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 13px 16px;
+    text-align: left; cursor: pointer; transition: all 0.18s;
+    font-size: 0.9rem; font-family: 'DM Sans', sans-serif;
+    color: var(--text); font-weight: 500; line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 11px;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: rgba(79,142,247,0.5); background: rgba(79,142,247,0.08);
+    transform: translateX(3px);
+  }
+  .option-btn .opt-label {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--border); display: flex; align-items: center; justify-content: center;
+    font-size: 0.73rem; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+    transition: all 0.18s;
+  }
+  .option-btn:hover:not(:disabled) .opt-label { background: var(--accent); color: #0a0e17; }
+  .option-btn.selected { border-color: rgba(79,142,247,0.5); background: rgba(79,142,247,0.08); }
+  .option-btn.selected .opt-label { background: var(--accent); color: #0a0e17; }
+  .option-btn.correct { border-color: var(--green); background: rgba(63,185,80,0.1); pointer-events: none; }
+  .option-btn.correct .opt-label { background: var(--green); color: #0a0e17; }
+  .option-btn.wrong { border-color: var(--red); background: rgba(248,81,73,0.1); pointer-events: none; }
+  .option-btn.wrong .opt-label { background: var(--red); color: #fff; }
+  .option-btn.disabled-plain { opacity: 0.5; pointer-events: none; }
+
+  /* TRUE/FALSE */
+  .tf-statement {
+    background: var(--surface2); padding: 14px;
+    border-radius: var(--radius); margin-bottom: 8px;
+    font-weight: 500; border-left: 3px solid var(--border);
+    font-size: 0.88rem; line-height: 1.55;
+  }
+  .tf-buttons { display: flex; gap: 8px; margin-top: 8px; }
+  .tf-btn {
+    flex: 1; padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer;
+    transition: all 0.2s; font-weight: 600;
+    font-size: 0.83rem; background: var(--surface2);
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+  }
+  .tf-btn:hover:not(.disabled) { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+  .tf-btn.selected-true { background: rgba(63,185,80,0.15); border-color: var(--green); color: var(--green); }
+  .tf-btn.selected-false { background: rgba(248,81,73,0.15); border-color: var(--red); color: var(--red); }
+  .tf-btn.correct { background: rgba(63,185,80,0.2) !important; border-color: var(--green) !important; color: var(--green) !important; }
+  .tf-btn.wrong { background: rgba(248,81,73,0.2) !important; border-color: var(--red) !important; color: var(--red) !important; }
+  .tf-btn.disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* SHORT ANSWER */
+  .short-answer-container { background: var(--surface2); padding: 20px; border-radius: var(--radius); }
+  .short-answer-inputs { display: flex; gap: 8px; margin-bottom: 14px; justify-content: center; flex-wrap: wrap; }
+  .answer-input {
+    width: 50px; height: 52px; padding: 12px;
+    border: 2px solid var(--border); border-radius: 8px;
+    font-size: 1.3rem; text-align: center;
+    transition: all 0.2s; background: var(--surface);
+    font-weight: 700; color: var(--text); font-family: 'DM Sans', sans-serif;
+  }
+  .answer-input:focus { outline: none; border-color: var(--accent); background: rgba(79,142,247,0.07); }
+  .answer-input.correct { border-color: var(--green) !important; background: rgba(63,185,80,0.15) !important; color: var(--green) !important; }
+  .answer-input.incorrect { border-color: var(--red) !important; background: rgba(248,81,73,0.15) !important; color: var(--red) !important; }
+  .answer-input.disabled { cursor: not-allowed; opacity: 0.7; }
+  .short-answer-hint { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 10px; font-style: italic; }
+  .correct-answer-display { margin-top: 14px; padding: 11px; background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); border-radius: 8px; text-align: center; font-weight: 600; color: var(--green); font-size: 0.93rem; }
+
+  /* FEEDBACK */
+  .feedback-box {
+    border-radius: var(--radius); padding: 13px 17px;
+    font-size: 0.87rem; font-weight: 600; margin-bottom: 14px;
+    display: none; align-items: flex-start; gap: 10px; line-height: 1.5;
+  }
+  .feedback-box.show { display: flex; }
+  .feedback-box.correct-fb { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); color: #7ee787; }
+  .feedback-box.wrong-fb { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); color: #ff7b72; }
+
+  .btn-check {
+    background: linear-gradient(135deg, #4f8ef7, #7ab3ff);
+    color: #0a0e17; border: none; border-radius: var(--radius);
+    padding: 12px 24px; font-size: 0.9rem; font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    display: none; margin-top: 12px; width: 100%;
+  }
+  .btn-check.show { display: block; }
+  .btn-check:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(79,142,247,0.35); }
+
+  .btn-next {
+    background: linear-gradient(135deg, #4f8ef7, #7ab3ff);
+    color: #0a0e17; border: none; border-radius: var(--radius);
+    padding: 14px 36px; font-size: 0.95rem; font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    display: none; width: 100%;
+  }
+  .btn-next.show { display: block; }
+  .btn-next:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,142,247,0.35); }
+
+  /* ── RESULT SCREEN ── */
+  #result-screen { text-align: center; padding-top: 40px; }
+  .result-ring-wrap { display: flex; justify-content: center; margin-bottom: 26px; }
+  .result-ring { width: 160px; height: 160px; position: relative; }
+  .result-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+  .ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-pct { font-family: 'Libre Baskerville', serif; font-size: 2.2rem; font-weight: 900; }
+  .ring-lbl { font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
+  .result-title { font-family: 'Libre Baskerville', serif; font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+  .result-sub { color: var(--muted); margin-bottom: 30px; }
+  .result-stats { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .res-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 18px; min-width: 95px; }
+  .res-stat .rs-num { font-family: 'Libre Baskerville', serif; font-size: 1.8rem; font-weight: 700; }
+  .res-stat .rs-lbl { font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .res-stat.green .rs-num { color: var(--green); }
+  .res-stat.red .rs-num { color: var(--red); }
+  .res-stat.blue .rs-num { color: var(--accent); }
+  .result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-restart, .btn-back {
+    border-radius: var(--radius); padding: 13px 26px;
+    font-size: 0.9rem; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s; border: none;
+  }
+  .btn-restart { background: linear-gradient(135deg, #4f8ef7, #7ab3ff); color: #0a0e17; }
+  .btn-restart:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79,142,247,0.35); }
+  .btn-back { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-back:hover { border-color: var(--accent); color: var(--accent2); }
+  .review-section { margin-top: 36px; text-align: left; }
+  .review-title { font-family: 'Libre Baskerville', serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 14px; color: var(--accent2); }
+  .review-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 10px; }
+  .review-item .ri-q { font-size: 0.87rem; font-weight: 600; margin-bottom: 8px; line-height: 1.5; }
+  .review-item .ri-row { font-size: 0.8rem; margin-top: 4px; line-height: 1.5; }
+  .ri-wrong-ans { color: var(--red); }
+  .ri-right-ans { color: var(--green); }
+
+  @media (max-width: 600px) {
+    .answer-input { width: 44px; height: 46px; font-size: 1.1rem; }
+    .q-image { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow" id="glow"></div>
+
+<!-- START SCREEN -->
+<div class="screen active" id="start-screen">
+  <div class="logo-badge">🧬 Ôn tập Sinh Học</div>
+  <h1 class="main-title">Quiz Sinh Học 10</h1>
+  <p class="subtitle">Phân bào • Vi sinh vật • Virus • Miễn dịch – Đề cương cuối HK II</p>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">68</div><div class="lbl">Câu hỏi</div></div>
+    <div class="stat-card"><div class="num">4</div><div class="lbl">Chế độ</div></div>
+    <div class="stat-card"><div class="num">∞</div><div class="lbl">Thời gian</div></div>
+  </div>
+  <div class="mode-list" id="mode-list">
+    <div class="mode-card" data-mode="tong-hop">
+      <div class="mode-num">Tổng hợp</div>
+      <div class="mode-name">Tất cả loại câu hỏi</div>
+      <div class="mode-count">68 câu xáo trộn</div>
+    </div>
+    <div class="mode-card" data-mode="trac-nghiem">
+      <div class="mode-num">Trắc nghiệm</div>
+      <div class="mode-name">Chọn 1 trong 4</div>
+      <div class="mode-count">35 câu</div>
+    </div>
+    <div class="mode-card" data-mode="dung-sai">
+      <div class="mode-num">Đúng – Sai</div>
+      <div class="mode-name">Đánh giá từng phương án</div>
+      <div class="mode-count">9 câu</div>
+    </div>
+    <div class="mode-card" data-mode="tra-loi-ngan">
+      <div class="mode-num">Trả lời ngắn</div>
+      <div class="mode-name">Điền số vào ô</div>
+      <div class="mode-count">12 câu</div>
+    </div>
+  </div>
+  <button class="btn-start" id="btn-start">🎯 Bắt đầu làm bài</button>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="quiz-screen">
+  <div class="quiz-header">
+    <div class="mode-badge" id="cur-mode-badge">Tổng hợp</div>
+    <div class="q-counter">Câu <span id="q-cur">1</span> / <span id="q-total">68</span></div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar"></div></div>
+  <div class="segment-progress" id="seg-progress"></div>
+  <div class="question-card" id="question-card">
+    <div class="q-text" id="q-text"></div>
+    <div id="q-image-container"></div>
+    <div id="q-content"></div>
+  </div>
+  <div class="feedback-box" id="feedback-box"></div>
+  <button class="btn-next" id="btn-next">Câu tiếp theo →</button>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="screen" id="result-screen">
+  <div class="result-ring-wrap">
+    <div class="result-ring">
+      <svg viewBox="0 0 160 160">
+        <circle class="ring-bg" cx="80" cy="80" r="65"/>
+        <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="65"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-pct" id="ring-pct">0%</div>
+        <div class="ring-lbl">Điểm số</div>
+      </div>
+    </div>
+  </div>
+  <div class="result-title" id="result-title"></div>
+  <div class="result-sub" id="result-sub"></div>
+  <div class="result-stats">
+    <div class="res-stat green"><div class="rs-num" id="rs-correct">0</div><div class="rs-lbl">Đúng</div></div>
+    <div class="res-stat red"><div class="rs-num" id="rs-wrong">0</div><div class="rs-lbl">Sai</div></div>
+    <div class="res-stat blue"><div class="rs-num" id="rs-total">0</div><div class="rs-lbl">Tổng câu</div></div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-restart" id="btn-restart">🔄 Làm lại</button>
+    <button class="btn-back" id="btn-back">← Chọn chế độ khác</button>
+  </div>
+  <div class="review-section" id="review-section">
+    <div class="review-title">📋 Các câu trả lời sai</div>
+    <div id="review-list"></div>
+  </div>
+</div>
+
+<script>
+// ── IMAGES (base64 will be loaded from same folder; use URL reference) ──
+const IMG = {
+  ds1: 'DS_C1.jpg',
+  ds3: 'DS_C3.png',
+  ds5: 'DS_C5.png'
+};
+
+const questionsData = {
+  tracNghiem: [
+    { id:1, question:"Tại sao có sự khác nhau trong quá trình phân chia tế bào chất ở tế bào động vật và tế bào thực vật?", options:["Vì tế bào động vật có lysosome.","Vì tế bào động vật có trung thể.","Vì tế bào thực vật có lục lạp.","Vì tế bào thực vật có thành tế bào."], correct:3 },
+    { id:2, question:"Khối u ác tính là hiện tượng?", options:["Tế bào không lan rộng đến vị trí khác.","Tế bào có khả năng lây lan sang các mô lân cận và các cơ quan ở xa.","Tế bào không lan rộng nhưng xâm lấn sang các mô lân cận.","Tế bào phân chia một cách bình thường."], correct:1 },
+    { id:3, question:'"Một vòng tuần hoàn các hoạt động sống xảy ra trong một tế bào từ khi tế bào được hình thành đến khi tế bào phân chia thành tế bào mới" được gọi là:', options:["Chu kỳ tế bào","Vòng tuần hoàn","Nguyên phân","Nhịp sinh học"], correct:0 },
+    { id:4, question:"Bệnh ung thư xảy ra là do", options:["Sự tăng cường phân chia mất kiểm soát của một nhóm tế bào trong cơ thể.","Sự giảm tốc độ phân chia bất bình thường của một nhóm tế bào trong cơ thể.","Sự mất khả năng phân chia bất bình thường của một nhóm tế bào trong cơ thể.","Sự tăng cường số lượng các điểm kiểm soát của một nhóm tế bào trong cơ thể."], correct:0 },
+    { id:5, question:"Thứ tự các kỳ trong giai đoạn phân chia nhân của quá trình nguyên phân là", options:["Kì đầu → kì giữa → kì cuối → kì sau","Kì đầu → kì giữa → kì sau → kì cuối","Kì đầu → kì sau → kì giữa → kì cuối","Kì đầu → kì sau → kì cuối → kì giữa"], correct:1 },
+    { id:6, question:"Sự kiện nào sau đây không xảy ra tại kì đầu của lần giảm phân I?", options:["Nhiễm sắc thể kép trong cặp tương đồng có thể trao đổi chéo.","Nhiễm sắc thể đơn tự nhân đôi thành nhiễm sắc thể kép.","Màng nhân và nhân con dần tiêu biến.","NST kép trong cặp tương đồng tiếp hợp."], correct:1 },
+    { id:7, question:"Giảm phân I làm cho", options:["Số lượng NST giảm đi một nửa và tạo ra các tổ hợp NST mới.","Số lượng NST tăng lên gấp đôi và tạo ra các tổ hợp NST mới.","Số lượng NST được giữ nguyên nhưng tạo ra các tổ hợp NST mới.","Số lượng NST giảm đi một nửa nhưng không tạo ra các tổ hợp NST mới."], correct:0 },
+    { id:8, question:"Đặc điểm nào sau đây chỉ có ở quá trình giảm phân mà không có ở quá trình nguyên phân?", options:["Có sự tiếp hợp, trao đổi chéo giữa các cặp NST trong cặp tương đồng","Ở kỳ giữa, các NST tập trung thành một hàng ở mặt phẳng xích đạo","Ở pha S của kỳ trung gian, các NST nhân đôi thành NST kép","Các NST đóng xoắn cực đại ở kì giữa và phân ly về 2 cực tế bào ở kì sau."], correct:0 },
+    { id:9, question:"Trong giảm phân, kì sau I và kì sau II đều xảy ra hiện tượng nào sau đây?", options:["Các chromatid tách nhau ra ở tâm động.","Các NST kép tập trung thành một hàng.","Các NST di chuyển về 2 cực của tế bào.","Các NST kép bắt đôi theo từng cặp tương đồng."], correct:2 },
+    { id:10, question:"Trường hợp nào sau đây được gọi là giảm phân?", options:["Tế bào mẹ 2n tạo ra tế bào con có bộ NST 2n","Tế bào mẹ 2n tạo ra tế bào con có bộ NST n","Tế bào mẹ 4n tạo ra tế bào con có bộ NST 4n","Tế bào mẹ n tạo ra tế bào con có bộ NST n"], correct:1 },
+    { id:11, question:"Giảm phân và nguyên phân giống nhau ở đặc điểm nào sau đây?", options:["Đều có 2 lần phân bào liên tiếp.","Đều có 1 lần nhân đôi nhiễm sắc thể.","Đều có sự tiếp hợp giữa các NST tương đồng.","Đều có sự trao đổi chéo giữa các NST tương đồng."], correct:1 },
+    { id:12, question:"Đặc điểm tiên quyết để xếp một loài vào nhóm vi sinh vật là", options:["Kích thước nhỏ bé, thường chỉ quan sát được dưới kính hiển vi.","Cấu tạo đơn giản, vật chất di truyền không được bao bọc bởi màng nhân.","Tốc độ chuyển hóa vật chất và năng lượng, sinh trưởng và sinh sản nhanh.","Khả năng thích nghi cao với mọi loại môi trường sống."], correct:0 },
+    { id:13, question:"Cho các sinh vật sau: vi khuẩn lactic, nấm men, trùng roi, trùng giày, tảo silic, rêu, giun đất. Có bao nhiêu loài là vi sinh vật?", options:["4","5","6","7"], correct:1 },
+    { id:14, question:"Vi sinh vật có tổ chức cơ thể", options:["Đa bào (nhân sơ hoặc nhân thực).","Đơn bào (nhân sơ hoặc nhân thực).","Đa bào nhân thực.","Đơn bào nhân thực."], correct:1 },
+    { id:15, question:"Phát biểu nào sau đây là đúng khi nói về khái niệm Vi sinh vật?", options:["Là sinh vật đơn bào, chỉ nhìn rõ dưới kính hiển vi","Là sinh vật nhân sơ, chỉ nhìn rõ dưới kính hiển vi","Là những sinh vật kí sinh trên cơ thể sinh vật khác","Là sinh vật đa bào có kích thước nhỏ, không nhìn thấy bằng mắt thường."], correct:0 },
+    { id:16, question:"Trình tự các pha sinh trưởng của quần thể vi khuẩn trong môi trường nuôi cấy không liên tục là", options:["Pha tiềm phát → pha lũy thừa → pha cân bằng → pha suy vong.","Pha tiềm phát → pha cân bằng → pha luỹ thừa → pha suy vong.","Pha lũy thừa → pha tiềm phát → pha suy vong → pha cân bằng.","Pha lũy thừa → pha tiềm phát → pha cân bằng → pha suy vong"], correct:0 },
+    { id:17, question:"Trong nuôi cấy không liên tục, để thu được lượng sinh khối tối đa nên tiến hành thu hoạch vào thời điểm nào?", options:["Đầu pha lũy thừa.","Cuối pha lũy thừa.","Đầu pha tiềm phát.","Cuối pha cân bằng."], correct:1 },
+    { id:18, question:'"Vi khuẩn thích ứng dần với môi trường, chúng tổng hợp enzyme trao đổi chất và DNA, chuẩn bị cho quá trình phân bào" là đặc điểm của pha sinh trưởng nào?', options:["Pha lag","Pha log","Pha cân bằng","Pha suy vong"], correct:0 },
+    { id:19, question:'"Số tế bào chết hoặc bị phân hủy nhiều hơn số tế bào sinh ra" là đặc điểm của pha sinh trưởng nào?', options:["Pha lag","Pha log","Pha cân bằng","Pha suy vong"], correct:3 },
+    { id:20, question:"Chất kháng sinh khác chất diệt khuẩn ở đặc điểm là", options:["Có khả năng tiêu diệt hoặc ức chế vi sinh vật một cách chọn lọc.","Không làm tổn thương đến da và mô sống của cơ thể người.","Có khả năng làm biến tính các protein, các loại màng tế bào.","Có khả năng sinh oxygen nguyên tử có tác dụng oxi hóa mạnh."], correct:0 },
+    { id:21, question:'"Chế phẩm có khả năng tiêu diệt hoặc ức chế đặc hiệu sự sinh trưởng của một hoặc một vài nhóm vi sinh vật" được gọi là', options:["Chất ức chế sinh học","Thuốc kháng sinh","Chất hoạt hóa enzyme","Thuốc tăng trưởng"], correct:1 },
+    { id:22, question:"Đơn phân để tổng hợp protein ở vi sinh vật là", options:["Amino acid.","Nucleotide.","Glycerol","Acid béo"], correct:0 },
+    { id:23, question:"Có thể giữ thức ăn tương đối lâu trong tủ lạnh vì", options:["Nhiệt độ thấp sẽ kìm hãm sự sinh trưởng của vi sinh vật gây hư hỏng thức ăn.","Nhiệt độ thấp sẽ tiêu diệt hết tất cả vi sinh vật gây hư hỏng thức ăn.","Nhiệt độ thấp sẽ làm biến tính acid nucleic của vi sinh vật.","Nhiệt độ thấp sẽ gây co nguyên sinh chất của vi sinh vật."], correct:0 },
+    { id:24, question:"Vi sinh vật tổng hợp lipid bằng cách liên kết:", options:["Glycerol và acid béo","Glycerol và protein","rRNA và protein","Glycogen và acid béo"], correct:0 },
+    { id:25, question:"Xử lý mùi hôi trong chăn nuôi là ứng dụng của chế phẩm sinh học trong lĩnh vực", options:["Sinh hoạt","Nông nghiệp","Bảo vệ môi trường","Công nghiệp"], correct:2 },
+    { id:26, question:"Xử lý nước thải là ứng dụng của công nghệ vi sinh vật trong", options:["Y học","Nông nghiệp","Môi trường","Sinh hoạt"], correct:2 },
+    { id:27, question:"Thành phần cấu tạo chính của virus là", options:["Màng bọc và vỏ capsid.","Vỏ capsid và gai glycoprotein.","Màng bọc và gai glycoprotein.","Lõi nucleic acid và vỏ capsid."], correct:3 },
+    { id:28, question:"Hệ gen của virus là", options:["ADN hoặc ARN","ADN, ARN, protein","ARN, protein","Nucleocapsid"], correct:0 },
+    { id:29, question:"Vì sao virus phải sống kí sinh nội bào bắt buộc?", options:["Vì virus không có cấu tạo tế bào nên phải kí sinh nội bào bắt buộc để sử dụng vật chất có sẵn trong tế bào chủ khi nhân lên.","Virus có kích thước rất nhỏ nên phải kí sinh nội bào bắt buộc để được bảo vệ trước tác động của ngoại cảnh.","Virus có quá trình trao đổi chất mạnh nên cần kí sinh nội bào bắt buộc.","Virus rất mẫn cảm với chất kháng sinh nên cần kí sinh nội bào bắt buộc."], correct:0 },
+    { id:30, question:"Dựa vào đặc điểm nào của virus mà người ta có thể sản xuất thuốc trừ sâu sinh học từ virus?", options:["Một số virus có khả năng gây bệnh cho cây trồng.","Một số virus có khả năng gây bệnh cho con người.","Một số virus có khả năng gây bệnh cho động vật.","Một số virus có khả năng gây bệnh cho sâu hại cây trồng."], correct:3 },
+    { id:31, question:"Vì sao mỗi loại virus chỉ xâm nhập vào một số tế bào vật chủ nhất định?", options:["Vì bề mặt của tế bào vật chủ được bảo vệ bởi một lớp protein chống lại sự xâm nhập của virus.","Vì bề mặt của virus có lớp vỏ ngoài hoặc vỏ capsid trơ với các thụ thể của tế bào vật chủ.","Vì virus chỉ xâm nhập được vào tế bào vật chủ khi có sự khớp đặc hiệu giữa phân tử bề mặt của virus và thụ thể bề mặt tế bào.","Vì virus chỉ xâm nhập được khi có sự khớp đặc hiệu giữa thụ thể của virus và phân tử bề mặt tế bào."], correct:2 },
+    { id:32, question:"Trong các thành tựu sau, số thành tựu là ứng dụng của virus trong y học là bao nhiêu? (1) Sản xuất vaccine phòng bệnh do virus. (2) Sản xuất kháng sinh điều trị bệnh nhiễm khuẩn. (3) Sản xuất hormone insulin điều trị bệnh tiểu đường. (4) Sản xuất interferon tăng cường miễn dịch.", options:["1","2","3","4"], correct:2 },
+    { id:33, question:"Virus có thể lây nhiễm từ bộ phận này sang bộ phận khác trong cây thông qua", options:["Cầu sinh chất.","Hệ thống mạch dẫn.","Khung xương tế bào.","Hệ thống nội màng"], correct:0 },
+    { id:34, question:"Miễn dịch đặc hiệu khác miễn dịch không đặc hiệu ở điểm là", options:["Được hình thành sau khi cơ thể tiếp xúc với mầm bệnh.","Là phản ứng miễn dịch chung đối với tất cả các mầm bệnh.","Giúp ngăn cản mầm bệnh xâm nhập vào tế bào và cơ thể.","Được hình thành mà không cần yêu cầu tiếp xúc với mầm bệnh."], correct:0 },
+    { id:35, question:"Con người thường chủ động kích hoạt miễn dịch đặc hiệu của cơ thể bằng cách", options:["Vệ sinh cơ thể sạch sẽ.","Vệ sinh môi trường sạch sẽ.","Tiêm vaccine.","Hạn chế tiếp xúc với người bệnh."], correct:2 }
+  ],
+
+  dungSai: [
+    {
+      id:1,
+      question:"Các giai đoạn của chu kỳ tế bào được minh họa như hình bên. Hãy cho biết các phát biểu sau đây là Đúng hay Sai?",
+      image: IMG.ds1,
+      statements:[
+        "Chu kỳ tế bào gồm 2 giai đoạn là kỳ trung gian và phân bào (pha M).",
+        "Trong chu kì tế bào, trật tự các pha gồm pha G1, pha G2, pha S, pha phân bào.",
+        "Tất cả các tế bào sau khi trải qua kỳ trung gian đều đủ tiêu chuẩn để tham gia vào quá trình phân bào (pha M).",
+        "Loại tế bào thần kinh ở người trưởng thành không bao giờ phân chia mà chỉ tồn tại ở pha G1 vì không có trung thể, thoi vô sắc sẽ không được hình thành."
+      ],
+      correct:[true,false,false,false]
+    },
+    {
+      id:2,
+      question:"Mỗi mệnh đề sau là đúng hay sai khi nói về điểm khác nhau giữa chất kháng sinh và chất diệt khuẩn:",
+      statements:[
+        "Có khả năng tiêu diệt hoặc ức chế vi sinh vật một cách chọn lọc.",
+        "Có khả năng sinh oxygen nguyên tử có tác dụng oxi hóa mạnh.",
+        "Không làm tổn thương đến da và mô sống của cơ thể người.",
+        "Có khả năng làm biến tính các protein, các loại màng tế bào."
+      ],
+      correct:[true,false,true,false]
+    },
+    {
+      id:3,
+      question:"Khi nói về thuốc kháng sinh, các phát biểu dưới đây là đúng hay sai?",
+      statements:[
+        "Thuốc kháng sinh là chế phẩm có khả năng tiêu diệt hoặc ức chế đặc hiệu sự sinh trưởng của một hoặc một vài nhóm vi sinh vật.",
+        "Thuốc kháng sinh được dùng để điều trị các bệnh nhiễm trùng ở người, động vật và thực vật.",
+        "Việc lạm dụng thuốc kháng sinh gây hiện tượng nhờn thuốc (kháng kháng sinh) nhanh chóng ở nhiều vi sinh vật gây bệnh.",
+        "Dung dịch cồn – iodine có khả năng ức chế sinh trưởng và tiêu diệt vi sinh vật nhưng không được coi là chất kháng sinh."
+      ],
+      correct:[true,true,true,true]
+    },
+    {
+      id:4,
+      question:"Hình dưới đây mô tả một loại virus gây ra bệnh cúm. Cho biết mỗi nhận định sau đây là đúng hay sai:",
+      image: IMG.ds3,
+      statements:[
+        "Đây là virus có vỏ ngoài, chú thích 1 - gai glycoprotein N, 2 - gai glycoprotein H.",
+        "Gai N thực chất là enzyme Neuraminidase, có vai trò hỗ trợ giải phóng virus khỏi tế bào vật chủ.",
+        "Giả sử xảy ra đột biến gai H thì virus không xâm nhập được vào tế bào chủ vì gai H là thụ thể để xâm nhập nên đột biến mất gai H dẫn đến mất thụ thể.",
+        "Khi bị cúm thì dùng thuốc có thành phần Oseltamivir (Tamiflu) vì Oseltamivir là chất ức chế cạnh tranh với cơ chất của enzyme Neuraminidase ở virus cúm, ngăn ngừa các hạt virus giải phóng ra khỏi tế bào bị nhiễm."
+      ],
+      correct:[false,true,false,true]
+    },
+    {
+      id:5,
+      question:"Hình 1 mô tả các giai đoạn phân chia của một tế bào lưỡng bội. Các phát biểu sau là đúng hay sai?",
+      image: IMG.ds5,
+      statements:[
+        "Từ trái qua phải của Hình 1 lần lượt là các giai đoạn: Kì đầu, kì giữa, kì sau, kì cuối.",
+        "Hình 1 mô tả quá trình phân bào giảm phân I.",
+        "Nếu tế bào trong Hình 1 là tế bào sinh dục sơ khai thì khi tế bào chín sẽ tiến hành giảm phân bình thường mà không bị tác động bởi bất kì yếu tố nào.",
+        "Nếu cơ chế kiểm soát phân bào của tế bào trong Hình 1 bị rối loạn thì sự phân chia tế bào sẽ trở nên bất thường, có thể hình thành khối u."
+      ],
+      correct:[false,false,false,true]
+    },
+    {
+      id:6,
+      question:"Một nhà khoa học tiến hành thí nghiệm lai hai chủng virus A và B: Lấy vỏ capsid của virus A trộn với nucleic acid của virus B tạo thành virus lai rồi cho nhân lên. Biết mỗi loại virus chỉ kí sinh trong một loại vật chủ. Cho biết mỗi nhận định sau đây là đúng hay sai:",
+      statements:[
+        "Virus lai có vỏ của chủng A và lõi của chủng B.",
+        "Virus lai có thể xâm nhập vào tế bào vật chủ của virus A.",
+        "Virus lai sau khi nhân lên có thể xâm nhập vào vật chủ của cả virus A và virus B.",
+        "Virus lai sau khi nhân lên sẽ có vỏ của chủng B và lõi của chủng B."
+      ],
+      correct:[true,false,false,true]
+    },
+    {
+      id:7,
+      question:"Phát biểu sau đây là đúng hay sai khi nói về sự phóng thích của virus có màng bọc ra khỏi tế bào vật chủ:",
+      statements:[
+        "Tổng hợp các đoạn màng có gắn glycoprotein và hợp với màng sinh chất.",
+        "Tiết enzyme làm tan màng tế bào và chui ra ngoài.",
+        "Tổ hợp vỏ capsid, hệ gene đi ra ngoài theo kiểu xuất bào.",
+        "Kéo theo màng sinh chất của tế bào chủ và tạo thành vỏ ngoài của virus."
+      ],
+      correct:[true,false,true,true]
+    },
+    {
+      id:8,
+      question:"Khi nói về sự khác nhau trong giai đoạn xâm nhập của virus trần và virus có màng bọc, những phát biểu dưới đây là đúng hay sai?",
+      statements:[
+        "Virus trần đưa trực tiếp vật chất di truyền vào trong tế bào chủ. Còn virus có màng bọc thì đưa cấu trúc nucleocapsid hoặc cả virus vào trong tế bào chủ rồi mới phá bỏ các cấu trúc bao quanh để giải phóng vật chất di truyền.",
+        "Virus trần đưa cấu trúc nucleocapsid hoặc cả virus vào trong tế bào chủ rồi mới phá bỏ các cấu trúc bao quanh để giải phóng vật chất di truyền. Còn virus có màng bọc thì đưa trực tiếp vật chất di truyền vào trong tế bào chủ.",
+        "Virus trần đưa trực tiếp vỏ capsid vào trong tế bào chủ. Còn virus có màng bọc thì đưa cấu trúc nucleocapsid hoặc cả virus vào trong tế bào chủ rồi mới phá bỏ các cấu trúc bao quanh để giải phóng vật chất di truyền.",
+        "Virus trần đưa cấu trúc nucleocapsid hoặc cả virus vào trong tế bào chủ rồi mới phá bỏ các cấu trúc bao quanh. Còn virus có màng bọc thì đưa trực tiếp vỏ capsid vào trong tế bào chủ."
+      ],
+      correct:[true,false,false,false]
+    },
+    {
+      id:9,
+      question:"Mỗi nhận định sau đây đúng hay sai khi nói về phương thức lây truyền và cách phòng chống bệnh do virus?",
+      statements:[
+        "Hình thức lây truyền của virus qua vết thương là phương thức truyền dọc ở thực vật.",
+        "Đeo khẩu trang là một trong những biện pháp hiệu quả để phòng chống đại dịch Covid-19.",
+        "Các bệnh cúm, sởi, viêm gan B, sốt xuất huyết Dengue có hình thức lây truyền qua đường hô hấp.",
+        "Virus thực vật có thể lây truyền bằng các phương thức truyền ngang như virus động vật."
+      ],
+      correct:[false,true,false,true]
+    }
+  ],
+
+  traLoiNgan: [
+    { id:1, question:"Cho các gợi ý sau, có bao nhiêu ý đúng khi nói về vai trò của vi sinh vật trong cải thiện đất? (1) Tiêu diệt sâu hại. (2) Tiết ra chất có lợi cho cây trồng. (3) Tăng khả năng kết dính các hạt đất. (4) Chuyển hóa chất dinh dưỡng giúp cây dễ hấp thụ.", correct:"4" },
+    { id:2, question:"Cho các gợi ý sau, có bao nhiêu ý đúng khi nói về vai trò của vi sinh vật trong cải thiện đất? (1) Tiêu diệt sâu hại. (2) Tiết ra chất có lợi cho cây trồng. (3) Làm giảm khả năng kết dính các hạt đất. (4) Chuyển hóa chất dinh dưỡng giúp cây dễ hấp thụ.", correct:"3" },
+    { id:3, question:"Cho các loại phân sau: phân đạm, phân xanh, phân lân, phân kali, phân chuồng và phân vi sinh. Có bao nhiêu loại phân được bón để tăng lượng vi sinh vật trong đất trồng?", correct:"3" },
+    { id:4, question:"Cho các loại phân sau: phân đạm, phân lân, phân kali, phân chuồng và phân vi sinh. Có bao nhiêu loại phân được bón để tăng lượng vi sinh vật trong đất trồng?", correct:"2" },
+    { id:5, question:"Dựa vào khả năng phân giải ngoại bào các chất của vi sinh vật có thể ứng dụng vào bao nhiêu việc sau đây? (1) Sản xuất kháng sinh, protein đơn bào. (2) Sản xuất nước mắm, nước tương, acid hữu cơ. (3) Xử lý nước thải ô nhiễm. (4) Sản xuất bánh kẹo, rượu, sữa chua, rau, củ, quả muối chua.", correct:"4" },
+    { id:6, question:"Cho các hình thức sinh sản sau: (1) Phân đôi. (2) Nảy chồi. (3) Hình thành bào tử vô tính. (4) Hình thành bào tử tiếp hợp. Số hình thức sinh sản có cả ở vi sinh vật nhân sơ và vi sinh vật nhân thực là:", correct:"3" },
+    { id:7, question:"Cho các thông tin: (1) Giai đoạn tổng hợp. (2) Giai đoạn hấp phụ và xâm nhập. (3) Giai đoạn phóng thích. (4) Giai đoạn lắp ráp. Xác định đúng trình tự các giai đoạn trong chu trình nhân lên của virus HIV (viết liền 4 số).", correct:"2143" },
+    { id:8, question:"Cho các con đường lây truyền: (1) Qua đường hô hấp. (2) Qua đường tiêu hoá. (3) Qua vết trầy xước. (4) Qua quan hệ tình dục. (5) Qua đường máu. (6) Qua mẹ truyền sang con. Số con đường lây truyền thuộc phương thức lây truyền ngang là:", correct:"5" },
+    { id:9, question:"Cho các hướng phát triển: (1) Chỉnh sửa, tạo đột biến định hướng các gene trong tế bào vi sinh vật. (2) Tìm kiếm và khai thác các nguồn gene vi sinh vật. (3) Thiết lập các hệ thống lên men lớn, tự động, liên tục. (4) Xây dựng các giải pháp phân tích vi sinh vật tự động. Số hướng phát triển của công nghệ vi sinh vật trong tương lai là:", correct:"4" },
+    { id:10, question:"Cho các vai trò: (1) Góp phần tạo ra hợp chất hữu cơ cho sinh giới. (2) Góp phần cung cấp O₂ cho con người và các sinh vật. (3) Tham gia sản xuất thực phẩm, dược phẩm, nhiên liệu. (4) Góp phần cung cấp CO₂ cho quá trình quang hợp ở thực vật. Số vai trò của vi sinh vật quang tổng hợp là?", correct:"3" },
+    { id:11, question:"Cho các đặc điểm: (1) Có khả năng phân giải lân khó tan trong đất. (2) Có khả năng tăng cường cố định đạm. (3) Có khả năng kích thích sinh trưởng bộ rễ cây trồng. (4) Có khả năng tổng hợp độc tố đối với côn trùng. Số đặc điểm là cơ sở của việc ứng dụng vi sinh vật trong sản xuất phân hữu cơ là?", correct:"3" },
+    { id:12, question:"Cho các thành tựu: (1) Sử dụng vi khuẩn Corynebacterium glutamicum để sản xuất mì chính. (2) Sử dụng nấm mốc Aspergillus niger để sản xuất enzyme amylase, protease bổ sung vào thức ăn chăn nuôi. (3) Sử dụng nấm Penicillium chrysogenum để sản xuất kháng sinh penicillin. (4) Sử dụng vi khuẩn Lactococcus lactis để sản xuất phomat. Số thành tựu của công nghệ vi sinh trong công nghiệp thực phẩm là?", correct:"2" }
+  ]
+};
+
+// ── STATE ──
+let questions = [], qIdx = 0, answers = [], selectedMode = 'tong-hop';
+const LABELS = ['A','B','C','D'];
+const MODE_NAMES = { 'tong-hop':'Tổng hợp','trac-nghiem':'Trắc nghiệm','dung-sai':'Đúng – Sai','tra-loi-ngan':'Trả lời ngắn' };
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function normalizeAnswer(str) {
+  return String(str || '').trim().toLowerCase().replace(/\s+/g,'');
+}
+
+function prepareQuestions(mode) {
+  let pool = [];
+  if (mode === 'trac-nghiem') pool = questionsData.tracNghiem.map(q=>({...q,type:'tracNghiem'}));
+  else if (mode === 'dung-sai') pool = questionsData.dungSai.map(q=>({...q,type:'dungSai'}));
+  else if (mode === 'tra-loi-ngan') pool = questionsData.traLoiNgan.map(q=>({...q,type:'traLoiNgan'}));
+  else pool = [
+    ...questionsData.tracNghiem.map(q=>({...q,type:'tracNghiem'})),
+    ...questionsData.dungSai.map(q=>({...q,type:'dungSai'})),
+    ...questionsData.traLoiNgan.map(q=>({...q,type:'traLoiNgan'}))
+  ];
+  return shuffle(pool);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('.mode-card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedMode = card.dataset.mode;
+  });
+});
+document.querySelector('.mode-card').classList.add('selected');
+
+document.getElementById('btn-start').addEventListener('click', startQuiz);
+document.getElementById('btn-restart').addEventListener('click', startQuiz);
+document.getElementById('btn-back').addEventListener('click', ()=>showScreen('start-screen'));
+
+function startQuiz() {
+  questions = prepareQuestions(selectedMode);
+  qIdx = 0;
+  answers = new Array(questions.length).fill(null);
+  buildSegDots();
+  document.getElementById('cur-mode-badge').textContent = MODE_NAMES[selectedMode];
+  document.getElementById('q-total').textContent = questions.length;
+  showScreen('quiz-screen');
+  renderQuestion();
+}
+
+function buildSegDots() {
+  const seg = document.getElementById('seg-progress');
+  seg.innerHTML = '';
+  questions.forEach((_,i)=>{
+    const d = document.createElement('div');
+    d.className = 'seg-dot' + (i===0?' current':'');
+    d.id = 'dot-'+i;
+    seg.appendChild(d);
+  });
+}
+
+function updateSegDot(idx, state) {
+  const d = document.getElementById('dot-'+idx);
+  if(d) { d.className = 'seg-dot ' + state; }
+}
+
+function renderQuestion() {
+  const q = questions[qIdx];
+  document.getElementById('q-cur').textContent = qIdx+1;
+  const pct = ((qIdx+1)/questions.length)*100;
+  document.getElementById('progress-bar').style.width = pct+'%';
+  updateSegDot(qIdx, 'current');
+
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  void card.offsetWidth;
+  card.style.animation = '';
+
+  document.getElementById('q-text').textContent = q.question;
+
+  // Image
+  const imgC = document.getElementById('q-image-container');
+  imgC.innerHTML = '';
+  if (q.image) {
+    const img = document.createElement('img');
+    img.src = q.image;
+    img.className = 'q-image';
+    img.alt = 'Hình minh họa';
+    imgC.appendChild(img);
+  }
+
+  const content = document.getElementById('q-content');
+  content.innerHTML = '';
+  document.getElementById('feedback-box').className = 'feedback-box';
+  document.getElementById('feedback-box').innerHTML = '';
+  const btnNext = document.getElementById('btn-next');
+  btnNext.className = 'btn-next';
+
+  if (q.type === 'tracNghiem') renderMCQ(q, content);
+  else if (q.type === 'dungSai') renderTF(q, content);
+  else renderShortAnswer(q, content);
+}
+
+function renderMCQ(q, container) {
+  const opts = document.createElement('div');
+  opts.className = 'options';
+  q.options.forEach((opt, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-label">${LABELS[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', ()=>{
+      if(answers[qIdx] !== null) return;
+      answers[qIdx] = i;
+      // Show correct/wrong
+      opts.querySelectorAll('.option-btn').forEach((b,bi)=>{
+        if(bi === q.correct) b.classList.add('correct');
+        else if(bi === i && i !== q.correct) b.classList.add('wrong');
+        else b.classList.add('disabled-plain');
+      });
+      const isCorrect = i === q.correct;
+      updateSegDot(qIdx, isCorrect?'correct':'wrong');
+      showFeedback(isCorrect, `Đáp án đúng: ${LABELS[q.correct]}. ${q.options[q.correct]}`);
+    });
+    opts.appendChild(btn);
+  });
+  container.appendChild(opts);
+}
+
+function renderTF(q, container) {
+  if(!answers[qIdx]) answers[qIdx] = new Array(q.statements.length).fill(null);
+  const userAnswer = answers[qIdx];
+
+  q.statements.forEach((stmt, idx)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'tf-statement';
+
+    const label = document.createElement('div');
+    label.style.marginBottom = '2px';
+    label.innerHTML = `<strong>${String.fromCharCode(97+idx)})</strong> ${stmt}`;
+    wrap.appendChild(label);
+
+    const btns = document.createElement('div');
+    btns.className = 'tf-buttons';
+
+    const btnT = document.createElement('button');
+    btnT.className = 'tf-btn'; btnT.textContent = '✓ Đúng';
+    const btnF = document.createElement('button');
+    btnF.className = 'tf-btn'; btnF.textContent = '✗ Sai';
+
+    btns.appendChild(btnT);
+    btns.appendChild(btnF);
+    wrap.appendChild(btns);
+    container.appendChild(wrap);
+
+    [btnT, btnF].forEach((b,bi)=>{
+      b.addEventListener('click', ()=>{
+        if(b.classList.contains('disabled')) return;
+        const val = bi===0;
+        userAnswer[idx] = val;
+        btnT.className = 'tf-btn' + (val?' selected-true':'');
+        btnF.className = 'tf-btn' + (!val?' selected-false':'');
+
+        // Check if all answered
+        if(userAnswer.every(v=>v!==null)) {
+          showTFResult(q, container, userAnswer);
+        }
+      });
+    });
+  });
+
+  // Submit button
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'btn-check show';
+  submitBtn.id = 'btn-check-tf';
+  submitBtn.textContent = '✓ Kiểm tra đáp án';
+  submitBtn.style.display = 'none';
+  container.appendChild(submitBtn);
+  submitBtn.onclick = () => showTFResult(q, container, userAnswer);
+
+  // Watch for all answered
+  const origListeners = [];
+  const allBtns = container.querySelectorAll('.tf-btn');
+  // re-attach check
+}
+
+function showTFResult(q, container, userAnswer) {
+  if(container.dataset.checked) return;
+  container.dataset.checked = '1';
+
+  // Disable all tf-btns
+  container.querySelectorAll('.tf-btn').forEach(b=>{
+    b.classList.add('disabled');
+    b.style.pointerEvents = 'none';
+  });
+
+  // Per-statement highlight
+  const stmtDivs = container.querySelectorAll('.tf-statement');
+  stmtDivs.forEach((wrap, idx)=>{
+    const btns = wrap.querySelectorAll('.tf-btn');
+    const correctVal = q.correct[idx];
+    if(correctVal === true) {
+      btns[0].classList.add('correct');
+      if(userAnswer[idx] === false) btns[1].classList.add('wrong');
+    } else {
+      btns[1].classList.add('correct');
+      if(userAnswer[idx] === true) btns[0].classList.add('wrong');
+    }
+  });
+
+  const isCorrect = JSON.stringify(userAnswer) === JSON.stringify(q.correct);
+  updateSegDot(qIdx, isCorrect?'correct':'wrong');
+  showFeedback(isCorrect, `Đáp án: ${q.correct.map((c,i)=>`${String.fromCharCode(97+i)}: ${c?'Đúng':'Sai'}`).join(', ')}`);
+}
+
+function renderShortAnswer(q, container) {
+  const wrap = document.createElement('div');
+  wrap.className = 'short-answer-container';
+
+  const inputsDiv = document.createElement('div');
+  inputsDiv.className = 'short-answer-inputs';
+
+  const ansLen = String(q.correct).length;
+  const inputCount = 4//Math.max(ansLen, 1);
+
+  for(let i=0;i<inputCount;i++){
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'answer-input';
+    inp.maxLength = 1; inp.dataset.pos = i;
+    inp.addEventListener('input', e => handleSAInput(e, i, inputCount));
+    inp.addEventListener('keydown', e => handleSAKeydown(e, i));
+    inputsDiv.appendChild(inp);
+  }
+  wrap.appendChild(inputsDiv);
+
+  const hint = document.createElement('div');
+  hint.className = 'short-answer-hint';
+  hint.textContent = '💡 Nhập từng ký tự vào mỗi ô';
+  wrap.appendChild(hint);
+
+  const checkBtn = document.createElement('button');
+  checkBtn.className = 'btn-check'; checkBtn.id = 'btn-check-sa';
+  checkBtn.textContent = '✓ Kiểm tra đáp án';
+  checkBtn.onclick = () => submitSA(q, wrap);
+  wrap.appendChild(checkBtn);
+
+  container.appendChild(wrap);
+}
+
+function handleSAInput(e, pos, total) {
+  let v = e.target.value;
+  if(v.length>1) v = v[v.length-1];
+  if(!/^[0-9a-zA-Z\-,.]$/.test(v)) { e.target.value=''; return; }
+  e.target.value = v;
+  if(v && pos<total-1) {
+    const inputs = document.querySelectorAll('.answer-input');
+    inputs[pos+1].focus();
+  }
+  const anyFilled = Array.from(document.querySelectorAll('.answer-input')).some(i=>i.value);
+  const btn = document.getElementById('btn-check-sa');
+  if(btn) btn.classList.toggle('show', anyFilled);
+}
+
+function handleSAKeydown(e, pos) {
+  if(e.key==='Backspace' && !e.target.value && pos>0) {
+    const inputs = document.querySelectorAll('.answer-input');
+    inputs[pos-1].focus();
+  }
+}
+
+function submitSA(q, wrap) {
+  const inputs = Array.from(document.querySelectorAll('.answer-input'));
+  const userAnswer = inputs.map(i=>i.value||'').join('');
+  const checkBtn = document.getElementById('btn-check-sa');
+  if(checkBtn) checkBtn.style.display='none';
+  answers[qIdx] = userAnswer;
+  const isCorrect = normalizeAnswer(userAnswer) === normalizeAnswer(q.correct);
+  inputs.forEach(inp=>{
+    inp.disabled=true;
+    inp.classList.add('disabled', isCorrect?'correct':'incorrect');
+  });
+  if(!isCorrect){
+    const d = document.createElement('div');
+    d.className='correct-answer-display';
+    d.textContent=`Đáp án đúng: ${q.correct}`;
+    wrap.appendChild(d);
+  }
+  updateSegDot(qIdx, isCorrect?'correct':'wrong');
+  showFeedback(isCorrect, `Đáp án đúng: ${q.correct}`);
+}
+
+function showFeedback(isCorrect, info) {
+  const fb = document.getElementById('feedback-box');
+  fb.className = 'feedback-box show ' + (isCorrect?'correct-fb':'wrong-fb');
+  fb.innerHTML = isCorrect ? '✅ Chính xác! Bạn đã trả lời đúng.' : `❌ Sai rồi. ${info}`;
+  const btnNext = document.getElementById('btn-next');
+  btnNext.className = 'btn-next show';
+  btnNext.textContent = qIdx===questions.length-1 ? '🏁 Xem kết quả' : 'Câu tiếp theo →';
+}
+
+function checkAnswer(i) {
+  const q = questions[i]; const a = answers[i];
+  if(q.type==='tracNghiem') return a===q.correct;
+  if(q.type==='dungSai') return a && JSON.stringify(a)===JSON.stringify(q.correct);
+  if(q.type==='traLoiNgan') return normalizeAnswer(a)===normalizeAnswer(q.correct);
+  return false;
+}
+
+document.getElementById('btn-next').addEventListener('click', ()=>{
+  if(qIdx < questions.length-1) { qIdx++; renderQuestion(); }
+  else showResults();
+});
+
+function showResults() {
+  const correct = answers.filter((_,i)=>checkAnswer(i)).length;
+  const total = questions.length;
+  const pct = Math.round((correct/total)*100);
+
+  const circ = 2*Math.PI*65;
+  const fill = document.getElementById('ring-fill');
+  fill.style.strokeDasharray = circ;
+  fill.style.strokeDashoffset = circ;
+  fill.style.stroke = pct>=80?'#3fb950':pct>=60?'#4f8ef7':'#f85149';
+  document.getElementById('ring-pct').textContent = pct+'%';
+  document.getElementById('rs-correct').textContent = correct;
+  document.getElementById('rs-wrong').textContent = total-correct;
+  document.getElementById('rs-total').textContent = total;
+
+  let title,sub;
+  if(pct>=90){title='🏆 Xuất sắc!';sub='Bạn đã nắm vững kiến thức Sinh học. Tuyệt vời!';}
+  else if(pct>=80){title='🌟 Giỏi lắm!';sub='Kết quả rất tốt, tiếp tục phát huy!';}
+  else if(pct>=60){title='👍 Khá tốt!';sub='Bạn đã vượt qua. Cố gắng hơn nữa!';}
+  else{title='📚 Cần cố gắng thêm!';sub='Hãy ôn lại kiến thức và thử lại nhé!';}
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = sub;
+
+  const reviewList = document.getElementById('review-list');
+  reviewList.innerHTML='';
+  const wrongOnes = questions.map((q,i)=>({q,ans:answers[i],i})).filter(({i})=>!checkAnswer(i));
+  if(!wrongOnes.length){
+    reviewList.innerHTML='<p style="color:var(--green);font-weight:600;">🎉 Bạn không có câu nào sai!</p>';
+  } else {
+    wrongOnes.forEach(({q,ans,i})=>{
+      const div = document.createElement('div');
+      div.className='review-item';
+      let wrongText='',rightText='';
+      if(q.type==='tracNghiem'){
+        wrongText = ans!==null ? `${LABELS[ans]}. ${q.options[ans]}` : 'Chưa trả lời';
+        rightText = `${LABELS[q.correct]}. ${q.options[q.correct]}`;
+      } else if(q.type==='dungSai'){
+        wrongText='Có phương án sai';
+        rightText=q.correct.map((c,idx)=>`${String.fromCharCode(97+idx)}: ${c?'Đúng':'Sai'}`).join(', ');
+      } else {
+        wrongText=ans||'Chưa trả lời';
+        rightText=q.correct;
+      }
+      div.innerHTML=`
+        <div class="ri-q">Câu ${i+1}: ${q.question.substring(0,130)}${q.question.length>130?'...':''}</div>
+        <div class="ri-row ri-wrong-ans">❌ Bạn trả lời: ${wrongText}</div>
+        <div class="ri-row ri-right-ans">✅ Đáp án đúng: ${rightText}</div>
+      `;
+      reviewList.appendChild(div);
+    });
+  }
+
+  showScreen('result-screen');
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      fill.style.strokeDashoffset = circ-(pct/100)*circ;
+    },100);
+  });
+}
+
+// Glow
+const glow = document.getElementById('glow');
+document.addEventListener('mousemove', e=>{
+  glow.style.left = e.clientX+'px';
+  glow.style.top = e.clientY+'px';
+});
+
+// TF – watch for all answered and auto-submit
+document.addEventListener('click', e=>{
+  if(!e.target.classList.contains('tf-btn')) return;
+  const container = document.getElementById('q-content');
+  const stmts = container.querySelectorAll('.tf-statement');
+  const q = questions[qIdx];
+  if(!q || q.type!=='dungSai') return;
+  if(container.dataset.checked) return;
+
+  const userAnswer = answers[qIdx];
+  // All filled?
+  if(userAnswer && userAnswer.every(v=>v!==null)){
+    setTimeout(()=>showTFResult(q, container, userAnswer), 400);
+  }
+});
+</script>
+</body>
+</html>
