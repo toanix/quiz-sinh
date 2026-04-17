@@ -704,6 +704,7 @@ function renderQuestion() {
 
   const content = document.getElementById('q-content');
   content.innerHTML = '';
+  delete content.dataset.checked;
   document.getElementById('feedback-box').className = 'feedback-box';
   document.getElementById('feedback-box').innerHTML = '';
   const btnNext = document.getElementById('btn-next');
@@ -717,26 +718,48 @@ function renderQuestion() {
 function renderMCQ(q, container) {
   const opts = document.createElement('div');
   opts.className = 'options';
+  const initialAnswer = answers[qIdx];
   q.options.forEach((opt, i)=>{
     const btn = document.createElement('button');
     btn.className = 'option-btn';
     btn.innerHTML = `<span class="opt-label">${LABELS[i]}</span><span>${opt}</span>`;
+    if (initialAnswer === i) btn.classList.add('selected');
     btn.addEventListener('click', ()=>{
-      if(answers[qIdx] !== null) return;
+      if(container.dataset.checked) return;
       answers[qIdx] = i;
-      // Show correct/wrong
-      opts.querySelectorAll('.option-btn').forEach((b,bi)=>{
-        if(bi === q.correct) b.classList.add('correct');
-        else if(bi === i && i !== q.correct) b.classList.add('wrong');
-        else b.classList.add('disabled-plain');
+      opts.querySelectorAll('.option-btn').forEach((b, bi)=>{
+        b.classList.toggle('selected', bi === i);
       });
-      const isCorrect = i === q.correct;
-      updateSegDot(qIdx, isCorrect?'correct':'wrong');
-      showFeedback(isCorrect, `Đáp án đúng: ${LABELS[q.correct]}. ${q.options[q.correct]}`);
+      checkBtn.classList.add('show');
     });
     opts.appendChild(btn);
   });
   container.appendChild(opts);
+
+  const checkBtn = document.createElement('button');
+  checkBtn.className = 'btn-check';
+  checkBtn.id = 'btn-check-mcq';
+  checkBtn.textContent = '✓ Kiểm tra đáp án';
+  if (initialAnswer !== null) checkBtn.classList.add('show');
+  checkBtn.onclick = () => submitMCQ(q, container, opts, checkBtn);
+  container.appendChild(checkBtn);
+}
+
+function submitMCQ(q, container, opts, checkBtn) {
+  if(container.dataset.checked) return;
+  const selected = answers[qIdx];
+  if(selected === null || selected === undefined) return;
+  container.dataset.checked = '1';
+  if(checkBtn) checkBtn.style.display = 'none';
+
+  opts.querySelectorAll('.option-btn').forEach((b,bi)=>{
+    if(bi === q.correct) b.classList.add('correct');
+    else if(bi === selected && selected !== q.correct) b.classList.add('wrong');
+    else b.classList.add('disabled-plain');
+  });
+  const isCorrect = selected === q.correct;
+  updateSegDot(qIdx, isCorrect?'correct':'wrong');
+  showFeedback(isCorrect, `Đáp án đúng: ${LABELS[q.correct]}. ${q.options[q.correct]}`);
 }
 
 function renderTF(q, container) {
@@ -772,28 +795,22 @@ function renderTF(q, container) {
         userAnswer[idx] = val;
         btnT.className = 'tf-btn' + (val?' selected-true':'');
         btnF.className = 'tf-btn' + (!val?' selected-false':'');
-
-        // Check if all answered
-        if(userAnswer.every(v=>v!==null)) {
-          showTFResult(q, container, userAnswer);
-        }
+        submitBtn.classList.toggle('show', userAnswer.every(v=>v!==null));
       });
     });
   });
 
   // Submit button
   const submitBtn = document.createElement('button');
-  submitBtn.className = 'btn-check show';
+  submitBtn.className = 'btn-check';
   submitBtn.id = 'btn-check-tf';
   submitBtn.textContent = '✓ Kiểm tra đáp án';
-  submitBtn.style.display = 'none';
+  if(userAnswer.every(v=>v!==null)) submitBtn.classList.add('show');
   container.appendChild(submitBtn);
-  submitBtn.onclick = () => showTFResult(q, container, userAnswer);
-
-  // Watch for all answered
-  const origListeners = [];
-  const allBtns = container.querySelectorAll('.tf-btn');
-  // re-attach check
+  submitBtn.onclick = () => {
+    if(!userAnswer.every(v=>v!==null)) return;
+    showTFResult(q, container, userAnswer);
+  };
 }
 
 function showTFResult(q, container, userAnswer) {
@@ -991,21 +1008,6 @@ document.addEventListener('mousemove', e=>{
   glow.style.top = e.clientY+'px';
 });
 
-// TF – watch for all answered and auto-submit
-document.addEventListener('click', e=>{
-  if(!e.target.classList.contains('tf-btn')) return;
-  const container = document.getElementById('q-content');
-  const stmts = container.querySelectorAll('.tf-statement');
-  const q = questions[qIdx];
-  if(!q || q.type!=='dungSai') return;
-  if(container.dataset.checked) return;
-
-  const userAnswer = answers[qIdx];
-  // All filled?
-  if(userAnswer && userAnswer.every(v=>v!==null)){
-    setTimeout(()=>showTFResult(q, container, userAnswer), 400);
-  }
-});
 </script>
 </body>
 </html>
